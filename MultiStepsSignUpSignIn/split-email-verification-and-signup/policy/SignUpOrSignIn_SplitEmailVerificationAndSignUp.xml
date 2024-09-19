@@ -1,10 +1,10 @@
 <TrustFrameworkPolicy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" PolicySchemaVersion="0.3.0.0" 
-  TenantId="tplussupport.onmicrosoft.com" 
+  TenantId="yourtenant.onmicrosoft.com" 
   PolicyId="B2C_1A_Demo_SignUp_SignIn_SplitEmailVerificationAndSignUp" 
-  PublicPolicyUri="http://tplussupport.onmicrosoft.com/B2C_1A_Demo_SignUp_SignIn_SplitEmailVerificationAndSignUp">
+  PublicPolicyUri="http://yourtenant.onmicrosoft.com/B2C_1A_Demo_SignUp_SignIn_SplitEmailVerificationAndSignUp">
   
   <BasePolicy>
-    <TenantId>tplussupport.onmicrosoft.com</TenantId>
+    <TenantId>yourtenant.onmicrosoft.com</TenantId>
     <PolicyId>B2C_1A_TrustFrameworkExtensions</PolicyId>
   </BasePolicy>
 
@@ -16,32 +16,8 @@
         <DataType>string</DataType>
         <UserInputType>Readonly</UserInputType>
       </ClaimType>
-
-      <ClaimType Id="userType">
-        <DisplayName>User Type</DisplayName>
-        <DataType>string</DataType>
-        <UserHelpText>Select your type (User, Merchant, Cashier, Partner)</UserHelpText>
-      </ClaimType>
-
-      <ClaimType Id="phoneNumber">
-        <DisplayName>Phone Number</DisplayName>
-        <DataType>string</DataType>
-        <UserHelpText>Enter your phone number for verification.</UserHelpText>
-      </ClaimType>
-
-      <ClaimType Id="uniqueId">
-        <DisplayName>Unique ID</DisplayName>
-        <DataType>string</DataType>
-        <UserHelpText>Enter your unique ID.</UserHelpText>
-      </ClaimType>
-
-      <ClaimType Id="pin">
-        <DisplayName>PIN</DisplayName>
-        <DataType>string</DataType>
-        <UserHelpText>Set a PIN for login.</UserHelpText>
-      </ClaimType>
-
     </ClaimsSchema>
+    
     <ClaimsTransformations>
       <ClaimsTransformation Id="CreateReadonlyEmailClaim" TransformationMethod="FormatStringClaim">
         <InputClaims>
@@ -141,46 +117,23 @@
           <!-- Sample: Disable session management for sign-up page -->
           <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
         </TechnicalProfile>
- 
-        <TechnicalProfile Id="SelfAsserted-UserTypeSelection">
-          <DisplayName>User Type Selection</DisplayName>
-          <Protocol Name="Proprietary" />
-          <Metadata>
-            <Item Key="ContentDefinitionReferenceId">api.localaccountsignup</Item>
-          </Metadata>
-          <OutputClaims>
-            <OutputClaim ClaimTypeReferenceId="userType" Required="true" />
-          </OutputClaims>
-        </TechnicalProfile>
       </TechnicalProfiles>
     </ClaimsProvider>
   </ClaimsProviders>
   <UserJourneys>
     <UserJourney Id="SignUpOrSignIn_Custom">
       <OrchestrationSteps>
-        <OrchestrationStep Order="1" Type="ClaimsExchange">
-          <ClaimsExchanges>
-            <ClaimsExchange Id="UserTypeSelection" TechnicalProfileReferenceId="SelfAsserted-UserTypeSelection" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-
-        <OrchestrationStep Order="2" Type="ClaimsExchange">
-          <ClaimsExchanges>
-            <ClaimsExchange Id="PhoneVerificationExchange" TechnicalProfileReferenceId="PhoneVerification" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-
-        <!-- <OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
+        <OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
           <ClaimsProviderSelections>
             <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
           </ClaimsProviderSelections>
           <ClaimsExchanges>
             <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
           </ClaimsExchanges>
-        </OrchestrationStep> -->
+        </OrchestrationStep>
 
         <!-- Check if the user has selected to sign in using one of the social providers -->
-        <!-- <OrchestrationStep Order="2" Type="ClaimsExchange">
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
           <Preconditions>
             <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
               <Value>objectId</Value>
@@ -190,8 +143,7 @@
           <ClaimsExchanges>
             <ClaimsExchange Id="SignUpWithLogonEmailExchange_EmailVerification" TechnicalProfileReferenceId="EmailVerification" />
           </ClaimsExchanges>
-        </OrchestrationStep> -->
-
+        </OrchestrationStep>
         <OrchestrationStep Order="3" Type="ClaimsExchange">
           <Preconditions>
             <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
@@ -203,20 +155,12 @@
             <ClaimsExchange Id="SignUpWithLogonEmailExchange_WithReadOnlyEmail" TechnicalProfileReferenceId="LocalAccountSignUpWithReadOnlyEmail" />
           </ClaimsExchanges>
         </OrchestrationStep>
-
         <OrchestrationStep Order="4" Type="ClaimsExchange">
           <ClaimsExchanges>
             <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
           </ClaimsExchanges>
         </OrchestrationStep>
-
-        <OrchestrationStep Order="5" Type="ClaimsExchange">
-          <ClaimsExchanges>
-            <ClaimsExchange Id="PinSettingExchange" TechnicalProfileReferenceId="SelfAsserted-PinSetting" />
-          </ClaimsExchanges>
-        </OrchestrationStep>
-
-        <OrchestrationStep Order="6" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+        <OrchestrationStep Order="5" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
       </OrchestrationSteps>
     </UserJourney>
   </UserJourneys>

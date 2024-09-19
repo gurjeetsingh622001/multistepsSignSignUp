@@ -287,6 +287,17 @@
           <Enumeration Text="Zimbabwe(+263)" Value="ZW" />
         </Restriction>
       </ClaimType>
+      
+      <ClaimType Id="userType">
+        <DisplayName>Select</DisplayName>
+        <DataType>string</DataType>
+        <UserHelpText>Select</UserHelpText>
+        <UserInputType>DropdownSingleSelect</UserInputType>
+        <Restriction>
+          <Enumeration Text="Individual" Value="user" />
+          <Enumeration Text="Merchant" Value="merchant" />
+        </Restriction>
+      </ClaimType>
 
     </ClaimsSchema>
 
@@ -542,6 +553,21 @@
           <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
         </TechnicalProfile>
 
+        <TechnicalProfile Id="SelfAsserted-UserTypeSelection">
+          <DisplayName>User Type Selection</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="ContentDefinitionReferenceId">api.selfasserted</Item>
+          </Metadata>
+          <InputClaims />
+          <PersistedClaims>
+            <PersistedClaim ClaimTypeReferenceId="userType" />
+          </PersistedClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="userType" Required="true" />
+          </OutputClaims>
+        </TechnicalProfile>
+
       </TechnicalProfiles>
     </ClaimsProvider>
   </ClaimsProviders>
@@ -549,12 +575,19 @@
   <UserJourneys>
     <UserJourney Id="PhoneSignInUp">
       <OrchestrationSteps>
+        
+        <!-- User Type Selection -->
+        <OrchestrationStep Order="1" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="UserTypeSelectionExchange" TechnicalProfileReferenceId="SelfAsserted-UserTypeSelection" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
 
         <!--
            Ask the user for the phone number. 
            The ValidationTechnicalProfile tries to read the user from the directory using the phone number
         -->
-        <OrchestrationStep Order="1" Type="ClaimsExchange">
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
           <ClaimsExchanges>
             <ClaimsExchange Id="SignIn" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Username" />
           </ClaimsExchanges>
@@ -563,7 +596,7 @@
         <!-- 
           Verify the phone number via SMS or Callback
          -->
-        <OrchestrationStep Order="2" Type="ClaimsExchange">
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
           <Preconditions>
             <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
               <Value>isActiveMFASession</Value>
@@ -578,7 +611,7 @@
         <!-- 
           If the user didn't exist previously, create the object in the directory
         -->
-        <OrchestrationStep Order="3" Type="ClaimsExchange">
+        <OrchestrationStep Order="4" Type="ClaimsExchange">
           <Preconditions>
             <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
               <Value>objectId</Value>
@@ -593,7 +626,7 @@
         <!--
           return the JWT token
         -->
-        <OrchestrationStep Order="4" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+        <OrchestrationStep Order="5" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
 
       </OrchestrationSteps>
       <ClientDefinition ReferenceId="DefaultWeb" />
@@ -613,6 +646,7 @@
       <Protocol Name="OpenIdConnect" />
       <OutputClaims>
         <OutputClaim ClaimTypeReferenceId="signinnames.phoneNumber" />
+        <OutputClaim ClaimTypeReferenceId="userType" />
         <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub"/>
         <OutputClaim ClaimTypeReferenceId="displayname" />
         <OutputClaim ClaimTypeReferenceId="newUser" />
