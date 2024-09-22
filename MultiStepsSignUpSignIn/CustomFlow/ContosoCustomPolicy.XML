@@ -882,30 +882,6 @@
         </ClaimsProvider>
 
         <ClaimsProvider>
-            <DisplayName>Claim Generator Technical Profiles</DisplayName>
-            <TechnicalProfiles>
-                <TechnicalProfile Id="ClaimGenerator">
-                    <DisplayName>Generate Object ID, displayName and  message Claims Technical Profile.</DisplayName>
-                    <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
-                    <OutputClaims>
-                        <OutputClaim ClaimTypeReferenceId="objectId"/>
-                        <OutputClaim ClaimTypeReferenceId="displayName"/>
-                        <OutputClaim ClaimTypeReferenceId="extension_FirstName"/>
-                        <OutputClaim ClaimTypeReferenceId="extension_LastName"/>
-                        <OutputClaim ClaimTypeReferenceId="extension_MiddleName"/>
-                        <OutputClaim ClaimTypeReferenceId="extension_TPlusUserType"/>
-                        <OutputClaim ClaimTypeReferenceId="message"/>
-                    </OutputClaims>
-                    <OutputClaimsTransformations>
-                        <OutputClaimsTransformation ReferenceId="GenerateRandomObjectIdTransformation"/>
-                        <OutputClaimsTransformation ReferenceId="CreateDisplayNameTransformation"/>
-                        <OutputClaimsTransformation ReferenceId="CreateMessageTransformation"/>
-                    </OutputClaimsTransformations>
-                </TechnicalProfile>
-            </TechnicalProfiles>            
-        </ClaimsProvider>
-
-        <ClaimsProvider>
             <DisplayName>Technical Profiles to collect User Type 1st step</DisplayName>
             <TechnicalProfiles>
                 <TechnicalProfile Id="UserTypeInformationCollector">
@@ -934,14 +910,17 @@
                         <Item Key="ContentDefinitionReferenceId">SelfAssertedContentDefinition</Item>
                     </Metadata>
                     <DisplayClaims>
-                        <DisplayClaim ClaimTypeReferenceId="extension_FirstName" Required="true"/>
-                        <DisplayClaim ClaimTypeReferenceId="extension_LastName" Required="true"/>
+                        <DisplayClaim ClaimTypeReferenceId="givenName" Required="true" />
                         <DisplayClaim ClaimTypeReferenceId="extension_MiddleName"/>
+                        <DisplayClaim ClaimTypeReferenceId="surName" Required="true" />
                     </DisplayClaims>
                     <OutputClaims>
-                        <OutputClaim ClaimTypeReferenceId="extension_FirstName"/>
-                        <OutputClaim ClaimTypeReferenceId="extension_LastName"/>
+                        <!-- <OutputClaim ClaimTypeReferenceId="extension_FirstName"/>
+                        <OutputClaim ClaimTypeReferenceId="extension_LastName"/> -->
                         <OutputClaim ClaimTypeReferenceId="extension_MiddleName"/>
+                        <OutputClaim ClaimTypeReferenceId="displayName" />
+                        <OutputClaim ClaimTypeReferenceId="givenName" />
+                        <OutputClaim ClaimTypeReferenceId="surName" />
                     </OutputClaims> 
                 </TechnicalProfile>
             </TechnicalProfiles>
@@ -956,12 +935,26 @@
                     <Metadata>
                         <Item Key="ContentDefinitionReferenceId">SelfAssertedContentDefinition</Item>
                     </Metadata>
+                    <CryptographicKeys>
+                      <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
+                    </CryptographicKeys>
+                    <InputClaimsTransformations>
+                      <InputClaimsTransformation ReferenceId="CreateRandomUPNUserName" />
+                      <InputClaimsTransformation ReferenceId="CreateUserPrincipalName" />
+                    </InputClaimsTransformations>
                     <DisplayClaims>
-                        <DisplayClaim ClaimTypeReferenceId="extension_TPlusID" Required="true"/>
+                      <DisplayClaim ClaimTypeReferenceId="extension_TPlusID" Required="true"/>
                     </DisplayClaims>
                     <OutputClaims>
-                        <OutputClaim ClaimTypeReferenceId="extension_TPlusID"/>
+                      <OutputClaim ClaimTypeReferenceId="objectId" />
+                      <OutputClaim ClaimTypeReferenceId="userPrincipalName" /> 
+                      <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
+                      <OutputClaim ClaimTypeReferenceId="extension_TPlusID"/>
                     </OutputClaims> 
+                    <ValidationTechnicalProfiles>
+                      <ValidationTechnicalProfile ReferenceId="AAD-UserWriteUsingLogonPhoneNumber" />
+                    </ValidationTechnicalProfiles>
+                    <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
                 </TechnicalProfile>
             </TechnicalProfiles>
         </ClaimsProvider>
@@ -969,21 +962,6 @@
         <ClaimsProvider>
             <DisplayName>Local Account Sign Up and  In With Phone</DisplayName>
             <TechnicalProfiles>
-              <TechnicalProfile Id="SelfAsserted-LocalAccountSignin-Phone-Only">
-                <DisplayName>Local Account Signin Using Phone Only</DisplayName>
-                <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-                <Metadata>
-                  <Item Key="setting.operatingMode">Username</Item>
-                </Metadata>
-                <InputClaims>
-                  <InputClaim ClaimTypeReferenceId="phoneNumber" />
-                </InputClaims>
-                <OutputClaims>
-                  <OutputClaim ClaimTypeReferenceId="phoneNumber" Required="true" />
-                  <OutputClaim ClaimTypeReferenceId="isLocalAccountSignIn" DefaultValue="true" />
-                </OutputClaims>
-                <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
-              </TechnicalProfile>
               <TechnicalProfile Id="LocalAccountSignUpWithLogonPhoneNumber">
                 <DisplayName>Phone</DisplayName>
                 <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
@@ -1001,58 +979,23 @@
                 </InputClaimsTransformations>
                 <DisplayClaims>
                   <DisplayClaim DisplayControlReferenceId="phoneVerificationControl" />
-                  <DisplayClaim ClaimTypeReferenceId="displayName" />
+                  <!-- <DisplayClaim ClaimTypeReferenceId="displayName" />
                   <DisplayClaim ClaimTypeReferenceId="givenName" />
-                  <DisplayClaim ClaimTypeReferenceId="surName" />
+                  <DisplayClaim ClaimTypeReferenceId="surName" /> -->
                 </DisplayClaims>
                 <OutputClaims>
                   <OutputClaim ClaimTypeReferenceId="objectId" />
                   <OutputClaim ClaimTypeReferenceId="userPrincipalName" />
-                  <OutputClaim ClaimTypeReferenceId="displayName" />
+                  <!-- <OutputClaim ClaimTypeReferenceId="displayName" />
                   <OutputClaim ClaimTypeReferenceId="givenName" />
-                  <OutputClaim ClaimTypeReferenceId="surName" />
+                  <OutputClaim ClaimTypeReferenceId="surName" /> -->
                   <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
                 </OutputClaims>
                 <ValidationTechnicalProfiles>
                   <ValidationTechnicalProfile ReferenceId="CombineCountryCodeAndNationalNumber" />
-                  <ValidationTechnicalProfile ReferenceId="AAD-UserWriteUsingLogonPhoneNumber" />
+                  <!-- <ValidationTechnicalProfile ReferenceId="AAD-UserWriteUsingLogonPhoneNumber" /> -->
                 </ValidationTechnicalProfiles>
                 <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
-              </TechnicalProfile>
-              <TechnicalProfile Id="PhoneInputPage-ChangePhoneNumberClaimsProviderSelection">
-                <DisplayName>Change Phone Number</DisplayName>
-                <Metadata>
-                  <Item Key="ClaimsProviderSelectionDisplayType">TextLink</Item>
-                </Metadata>
-                <OutputClaims>
-                  <OutputClaim ClaimTypeReferenceId="isChangePhoneNumber" DefaultValue="true" AlwaysUseDefaultValue="true" />
-                </OutputClaims>
-                <IncludeTechnicalProfile ReferenceId="PhoneInput-ChangePhoneNumber-Common" />
-              </TechnicalProfile>
-              <TechnicalProfile Id="PhoneInput-ChangePhoneNumber-Common">
-                <DisplayName>Phone</DisplayName>
-                <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
-                <Metadata>
-                  <Item Key="ContentDefinitionReferenceId">phoneInput</Item>
-                  <Item Key="UserMessageIfClaimsTransformationBooleanValueIsNotEqual">We don't have a recovery email address listed under the phone number you entered. Contact your organization's IT administrator to change your phone number.</Item>
-                </Metadata>
-                <CryptographicKeys>
-                  <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
-                </CryptographicKeys>
-                <DisplayClaims>
-                  <DisplayClaim ClaimTypeReferenceId="countryCode" Required="true" />
-                  <DisplayClaim ClaimTypeReferenceId="nationalNumber" Required="true" />
-                </DisplayClaims>
-                <OutputClaims>
-                  <OutputClaim ClaimTypeReferenceId="objectId" />
-                  <OutputClaim ClaimTypeReferenceId="userPrincipalName" />
-                  <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" />
-                </OutputClaims>
-                <ValidationTechnicalProfiles>
-                  <ValidationTechnicalProfile ReferenceId="CombineCountryCodeAndNationalNumber" />
-                  <ValidationTechnicalProfile ReferenceId="AAD-UserDiscoveryUsingLogonPhoneNumber-Common" />
-                  <ValidationTechnicalProfile ReferenceId="DoesStrongAuthEmailExist" />
-                </ValidationTechnicalProfiles>
               </TechnicalProfile>
               <TechnicalProfile Id="CombineCountryCodeAndNationalNumber">
                 <DisplayName>Combine country code and national number</DisplayName>
@@ -1320,16 +1263,6 @@
                     </ClaimsExchanges>
                 </OrchestrationStep>
                 <!-- phone section  -->
-                <!-- <OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="signuporsignin-phone">
-                  <ClaimsProviderSelections>
-                    <ClaimsProviderSelection TargetClaimsExchangeId="SignUpWithPhone" />
-                    <ClaimsProviderSelection TargetClaimsExchangeId="ChangePhoneNumber" />
-                    <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninPhoneExchange" />
-                  </ClaimsProviderSelections>
-                  <ClaimsExchanges>
-                    <ClaimsExchange Id="LocalAccountSigninPhoneExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Phone-Only" />
-                  </ClaimsExchanges>
-                </OrchestrationStep> -->
                 <OrchestrationStep Order="2" Type="ClaimsExchange">
                   <Preconditions>
                     <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
@@ -1339,47 +1272,20 @@
                   </Preconditions>
                   <ClaimsExchanges>
                     <ClaimsExchange Id="SignUpWithPhone" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonPhoneNumber" />
-                    <!-- <ClaimsExchange Id="ChangePhoneNumber" TechnicalProfileReferenceId="PhoneInputPage-ChangePhoneNumberClaimsProviderSelection" /> -->
                   </ClaimsExchanges>
                 </OrchestrationStep>
-                <!-- <OrchestrationStep Order="3" Type="ClaimsExchange">
-                  <Preconditions>
-                    <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
-                      <Value>isLocalAccountSignIn</Value>
-                      <Action>SkipThisOrchestrationStep</Action>
-                    </Precondition>
-                    <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
-                      <Value>isChangePhoneNumber</Value>
-                      <Action>SkipThisOrchestrationStep</Action>
-                    </Precondition>
-                  </Preconditions>
-                  <ClaimsExchanges>
-                    <ClaimsExchange Id="SignUpWithPhone_CollectEmailAddress" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonPhoneNumber_CollectEmailAddress" />
-                  </ClaimsExchanges>
-                </OrchestrationStep> -->
-                <!-- <OrchestrationStep Order="4" Type="InvokeSubJourney">
-                  <Preconditions>
-                    <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-                      <Value>isLocalAccountSignIn</Value>
-                      <Action>SkipThisOrchestrationStep</Action>
-                    </Precondition>
-                  </Preconditions>
-                  <JourneyList>
-                    <Candidate SubJourneyReferenceId="SignInWithPhone" />
-                  </JourneyList>
-                </OrchestrationStep> -->
-        <!-- <OrchestrationStep Order="5" Type="InvokeSubJourney">
-                  <Preconditions>
-                    <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
-                      <Value>isChangePhoneNumber</Value>
-                      <Action>SkipThisOrchestrationStep</Action>
-                    </Precondition>
-                  </Preconditions>
-                  <JourneyList>
-                    <Candidate SubJourneyReferenceId="ChangePhoneNumber" />
-                  </JourneyList>
-                </OrchestrationStep> -->
+                <!-- phone section  -->
                 <OrchestrationStep Order="3" Type="ClaimsExchange">
+                    <ClaimsExchanges>
+                        <ClaimsExchange Id="GetUserInformationClaimsExchange" TechnicalProfileReferenceId="UserInformationCollector"/>
+                    </ClaimsExchanges>
+                </OrchestrationStep>
+                <OrchestrationStep Order="4" Type="ClaimsExchange">
+                    <ClaimsExchanges>
+                        <ClaimsExchange Id="GetUserTPlusIDInformationClaimsExchange" TechnicalProfileReferenceId="UserTPlusIDInformationCollector"/>
+                    </ClaimsExchanges>
+                </OrchestrationStep>
+                <OrchestrationStep Order="5" Type="ClaimsExchange">
                   <Preconditions>
                     <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
                       <Value>hasFullProfile</Value>
@@ -1390,53 +1296,10 @@
                     <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
                   </ClaimsExchanges>
                 </OrchestrationStep>
-                <!-- phone section  -->
-                <OrchestrationStep Order="4" Type="ClaimsExchange">
-                    <ClaimsExchanges>
-                        <ClaimsExchange Id="GetUserInformationClaimsExchange" TechnicalProfileReferenceId="UserInformationCollector"/>
-                    </ClaimsExchanges>
-                </OrchestrationStep>
-                <OrchestrationStep Order="5" Type="ClaimsExchange">
-                    <ClaimsExchanges>
-                        <ClaimsExchange Id="GetUserTPlusIDInformationClaimsExchange" TechnicalProfileReferenceId="UserTPlusIDInformationCollector"/>
-                    </ClaimsExchanges>
-                </OrchestrationStep>
-                <!-- <OrchestrationStep Order="5" Type="ClaimsExchange">
-                    <ClaimsExchanges>
-                        <ClaimsExchange Id="GetMessageClaimsExchange" TechnicalProfileReferenceId="ClaimGenerator"/>
-                    </ClaimsExchanges>
-                </OrchestrationStep> -->
                 <OrchestrationStep Order="6" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer"/>
             </OrchestrationSteps>
         </UserJourney>
     </UserJourneys>
-    <SubJourneys>
-        <SubJourney Id="SignInWithPhone" Type="Call">
-            <OrchestrationSteps>
-              <OrchestrationStep Order="1" Type="ClaimsExchange">
-                <ClaimsExchanges>
-                  <ClaimsExchange Id="PhoneVerificationExchangePart1" TechnicalProfileReferenceId="PhoneVerificationPage1" />
-                </ClaimsExchanges>
-              </OrchestrationStep>
-              <OrchestrationStep Order="2" Type="ClaimsExchange">
-                <ClaimsExchanges>
-                  <ClaimsExchange Id="PhoneVerificationExchangePart2" TechnicalProfileReferenceId="PhoneVerificationPage2" />
-                </ClaimsExchanges>
-              </OrchestrationStep>
-              <OrchestrationStep Order="3" Type="ClaimsExchange">
-                <Preconditions>
-                  <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
-                    <Value>strongAuthenticationEmailAddress</Value>
-                    <Action>SkipThisOrchestrationStep</Action>
-                  </Precondition>
-                </Preconditions>
-                <ClaimsExchanges>
-                  <ClaimsExchange Id="SignUpWithPhone_CollectEmailAddress" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonPhoneNumber_CollectEmailAddress" />
-                </ClaimsExchanges>
-              </OrchestrationStep>
-            </OrchestrationSteps>
-          </SubJourney>
-    </SubJourneys>
 
     <RelyingParty><!-- 
             Relying Party Here that's your policy’s entry point
@@ -1453,11 +1316,14 @@
             <OutputClaims>
                 <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub"/>
                 <OutputClaim ClaimTypeReferenceId="displayName"/>
-                <OutputClaim ClaimTypeReferenceId="extension_FirstName"/>
-                <OutputClaim ClaimTypeReferenceId="extension_LastName"/>
                 <OutputClaim ClaimTypeReferenceId="extension_MiddleName"/>
+                <OutputClaim ClaimTypeReferenceId="givenName" />
+                <OutputClaim ClaimTypeReferenceId="surname" />
                 <OutputClaim ClaimTypeReferenceId="extension_TPlusID"/>
-                <!-- <OutputClaim ClaimTypeReferenceId="message"/> -->
+                <OutputClaim ClaimTypeReferenceId="extension_TPlusUserType"/>
+                <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
+                <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" />
+                <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true" DefaultValue="{Policy:TenantObjectId}" />
             </OutputClaims>
             <SubjectNamingInfo ClaimType="sub"/>
         </TechnicalProfile>
