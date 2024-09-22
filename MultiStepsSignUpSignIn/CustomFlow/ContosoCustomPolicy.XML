@@ -482,21 +482,18 @@
             </OutputClaims>
           </ClaimsTransformation>
     
-          <ClaimsTransformation Id="CreateDisplayNameTransformation"
-            TransformationMethod="FormatStringMultipleClaims">
+          <ClaimsTransformation Id="CreateDisplayNameTransformation" TransformationMethod="FormatStringMultipleClaims">
             <InputClaims>
-              <InputClaim ClaimTypeReferenceId="extension_FirstName"
-                TransformationClaimType="inputClaim1" />
-              <InputClaim ClaimTypeReferenceId="extension_LastName"
-                TransformationClaimType="inputClaim2" />
+            <InputClaim ClaimTypeReferenceId="givenName" TransformationClaimType="inputClaim1"/>
+            <InputClaim ClaimTypeReferenceId="surname" TransformationClaimType="inputClaim2"/>
             </InputClaims>
             <InputParameters>
-              <InputParameter Id="stringFormat" DataType="string" Value="{0} {1}" />
+            <InputParameter Id="stringFormat" DataType="string" Value="{0} {1}"/>
             </InputParameters>
             <OutputClaims>
-              <OutputClaim ClaimTypeReferenceId="displayName" TransformationClaimType="outputClaim" />
+            <OutputClaim ClaimTypeReferenceId="displayName" TransformationClaimType="outputClaim"/>
             </OutputClaims>
-          </ClaimsTransformation>
+        </ClaimsTransformation>
     
           <ClaimsTransformation Id="CreateMessageTransformation"
             TransformationMethod="FormatStringClaim">
@@ -915,13 +912,14 @@
                         <DisplayClaim ClaimTypeReferenceId="surName" Required="true" />
                     </DisplayClaims>
                     <OutputClaims>
-                        <!-- <OutputClaim ClaimTypeReferenceId="extension_FirstName"/>
-                        <OutputClaim ClaimTypeReferenceId="extension_LastName"/> -->
                         <OutputClaim ClaimTypeReferenceId="extension_MiddleName"/>
                         <OutputClaim ClaimTypeReferenceId="displayName" />
                         <OutputClaim ClaimTypeReferenceId="givenName" />
                         <OutputClaim ClaimTypeReferenceId="surName" />
                     </OutputClaims> 
+                    <OutputClaimsTransformations>
+                      <OutputClaimsTransformation ReferenceId="CreateDisplayNameTransformation"/>
+                  </OutputClaimsTransformations>
                 </TechnicalProfile>
             </TechnicalProfiles>
         </ClaimsProvider>
