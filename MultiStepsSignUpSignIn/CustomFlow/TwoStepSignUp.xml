@@ -13,6 +13,14 @@
 
     <BuildingBlocks>
         <ClaimsSchema>
+            <ClaimType Id="permissions">
+                <DisplayName>Permissions</DisplayName>
+                <DataType>string</DataType>
+              </ClaimType>
+              <ClaimType Id="userLanguage">
+                <DisplayName>User UI language (used by REST API to return localized error messages)</DisplayName>
+                <DataType>string</DataType>
+              </ClaimType>
             <ClaimType Id="objectId">
                 <DisplayName>unique object Id for subject of the claims being returned</DisplayName>
                 <DataType>string</DataType>
@@ -1318,6 +1326,38 @@
                 </TechnicalProfile>
             </TechnicalProfiles>
         </ClaimsProvider>
+        <ClaimsProvider>
+            <DisplayName>REST APIs</DisplayName>
+            <TechnicalProfiles>
+              <TechnicalProfile Id="REST-EnrichToken">
+                <DisplayName>Get user extended profile Azure Function web hook</DisplayName>
+                <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+                <Metadata>
+                  <!-- Set the ServiceUrl with your own REST API endpoint -->
+                  <Item Key="ServiceUrl">https://b185-2409-40d1-b2-5443-3121-be33-ade5-d79b.ngrok-free.app/api/Account/EnrichToken</Item>
+                  <Item Key="SendClaimsIn">Body</Item>
+                  <!-- Set AuthenticationType to Basic or ClientCertificate in production environments -->
+                  <Item Key="AuthenticationType">Basic</Item>
+                  <!-- REMOVE the following line in production environments -->
+                  <Item Key="AllowInsecureAuthInProduction">false</Item>
+                </Metadata>
+                <CryptographicKeys>
+                  <Key Id="BasicAuthenticationUsername" StorageReferenceId="B2C_1A_RestApiUsername" />
+                  <Key Id="BasicAuthenticationPassword" StorageReferenceId="B2C_1A_RestApiPassword" />
+                </CryptographicKeys>
+                <InputClaims>
+                  <!-- Claims sent to your REST API -->
+                  <InputClaim ClaimTypeReferenceId="objectId" />
+                  <InputClaim ClaimTypeReferenceId="userLanguage" PartnerClaimType="lang" DefaultValue="{Culture:LCID}" AlwaysUseDefaultValue="true" />
+                </InputClaims>
+                <OutputClaims>
+                  <!-- Claims parsed from your REST API -->
+                  <OutputClaim ClaimTypeReferenceId="permissions" />
+                </OutputClaims>
+                <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+              </TechnicalProfile>
+            </TechnicalProfiles>
+          </ClaimsProvider>
     </ClaimsProviders>
 
     <UserJourneys>
@@ -1355,7 +1395,12 @@
                             TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
                     </ClaimsExchanges>
                 </OrchestrationStep>
-                <OrchestrationStep Order="4" Type="SendClaims"
+                <OrchestrationStep Order="4" Type="ClaimsExchange">
+                    <ClaimsExchanges>
+                      <ClaimsExchange Id="RESTEnrichToken" TechnicalProfileReferenceId="REST-EnrichToken" />
+                    </ClaimsExchanges>
+                  </OrchestrationStep>
+                <OrchestrationStep Order="5" Type="SendClaims"
                     CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
             </OrchestrationSteps>
         </UserJourney>
@@ -1383,6 +1428,7 @@
                 <OutputClaim ClaimTypeReferenceId="extension_TPlusUserType" />
                 <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
                 <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" />
+                <OutputClaim ClaimTypeReferenceId="permissions" />
                 <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true"
                     DefaultValue="{Policy:TenantObjectId}" />
             </OutputClaims>
