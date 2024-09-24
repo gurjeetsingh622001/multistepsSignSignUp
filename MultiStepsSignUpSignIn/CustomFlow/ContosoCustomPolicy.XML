@@ -581,7 +581,7 @@
               <InputParameter Id="valueToCompareTo" DataType="boolean" Value="true" />
             </InputParameters>
           </ClaimsTransformation>
-    
+
           <!-- <ClaimsTransformation Id="CreateMessageUserTypeTransformation"
           TransformationMethod="FormatTPlusUserType">
                     <InputClaims>
@@ -977,20 +977,15 @@
                 </InputClaimsTransformations>
                 <DisplayClaims>
                   <DisplayClaim DisplayControlReferenceId="phoneVerificationControl" />
-                  <!-- <DisplayClaim ClaimTypeReferenceId="displayName" />
-                  <DisplayClaim ClaimTypeReferenceId="givenName" />
-                  <DisplayClaim ClaimTypeReferenceId="surName" /> -->
                 </DisplayClaims>
                 <OutputClaims>
                   <OutputClaim ClaimTypeReferenceId="objectId" />
                   <OutputClaim ClaimTypeReferenceId="userPrincipalName" />
-                  <!-- <OutputClaim ClaimTypeReferenceId="displayName" />
-                  <OutputClaim ClaimTypeReferenceId="givenName" />
-                  <OutputClaim ClaimTypeReferenceId="surName" /> -->
                   <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
                 </OutputClaims>
                 <ValidationTechnicalProfiles>
                   <ValidationTechnicalProfile ReferenceId="CombineCountryCodeAndNationalNumber" />
+                  <ValidationTechnicalProfile ReferenceId="AAD-UserReadUsingPhoneNumber-RaiseErrorIfExists" />
                   <!-- <ValidationTechnicalProfile ReferenceId="AAD-UserWriteUsingLogonPhoneNumber" /> -->
                 </ValidationTechnicalProfiles>
                 <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
@@ -1220,7 +1215,30 @@
               </OutputClaims>
               <IncludeTechnicalProfile ReferenceId="AAD-Common" />
             </TechnicalProfile>
-        <!-- Technical profile for reading user profile using phone number-->
+            <!-- Check User Exists with phone no -->
+            <TechnicalProfile Id="AAD-UserReadUsingPhoneNumber-RaiseErrorIfExists">
+              <Metadata>
+                <Item Key="Operation">Write</Item>
+                <Item Key="RaiseErrorIfClaimsPrincipalAlreadyExists">true</Item>
+                <Item Key="RaiseErrorIfClaimsPrincipalDoesNotExist">false</Item>
+                <Item Key="UserMessageIfClaimsPrincipalAlreadyExists">This Phone number is already exists.</Item>
+              </Metadata>
+              <InputClaims>
+                <InputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
+              </InputClaims>
+              <PersistedClaims>
+                <PersistedClaim ClaimTypeReferenceId="userPrincipalName" />
+                <PersistedClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
+                <PersistedClaim ClaimTypeReferenceId="displayName" DefaultValue="unknown" />
+              </PersistedClaims>
+              <OutputClaims>
+                <OutputClaim ClaimTypeReferenceId="objectId" />
+                <OutputClaim ClaimTypeReferenceId="userPrincipalName" />
+                <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
+              </OutputClaims>
+              <IncludeTechnicalProfile ReferenceId="AAD-Common" />
+            </TechnicalProfile>
+            <!-- Technical profile for reading user profile using phone number-->
             <TechnicalProfile Id="AAD-UserDiscoveryUsingLogonPhoneNumber-FullProfile">
               <OutputClaims>
                 <OutputClaim ClaimTypeReferenceId="displayName" />
