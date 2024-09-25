@@ -368,6 +368,12 @@
                 <UserHelpText>Enter your pin</UserHelpText>
                 <UserInputType>TextBox</UserInputType>
             </ClaimType>
+            <ClaimType Id="extension_UserPin">
+                <DisplayName>PIN</DisplayName>
+                <DataType>int</DataType>
+                <UserHelpText>Enter your pin</UserHelpText>
+                <UserInputType>TextBox</UserInputType>
+            </ClaimType>
         </ClaimsSchema>
         <Predicates>
             <Predicate Id="email" Method="MatchesRegex">
@@ -626,23 +632,23 @@
         <ClaimsProvider>
             <DisplayName>Token Issuer</DisplayName>
             <TechnicalProfiles>
-                <TechnicalProfile Id="JwtIssuer">
-                    <DisplayName>JWT Issuer</DisplayName>
-                    <Protocol Name="None" />
-                    <OutputTokenFormat>JWT</OutputTokenFormat>
-                    <Metadata>
-                        <Item Key="client_id">{service:te}</Item>
-                        <Item Key="issuer_refresh_token_user_identity_claim_type">objectId</Item>
-                        <Item Key="SendTokenResponseBodyWithJsonNumbers">true</Item>
-                    </Metadata>
-                    <CryptographicKeys>
-                        <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
-                        <Key Id="issuer_refresh_token_key"
-                            StorageReferenceId="B2C_1A_TokenEncryptionKeyContainer" />
-                    </CryptographicKeys>
-                </TechnicalProfile>
+              <TechnicalProfile Id="JwtIssuer">
+                <DisplayName>JWT Issuer</DisplayName>
+                <Protocol Name="OpenIdConnect" />
+                <OutputTokenFormat>JWT</OutputTokenFormat>
+                <Metadata>
+                  <Item Key="client_id">{service:te}</Item>
+                  <Item Key="issuer_refresh_token_user_identity_claim_type">objectId</Item>
+                  <Item Key="SendTokenResponseBodyWithJsonNumbers">true</Item>
+                </Metadata>
+                <CryptographicKeys>
+                  <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
+                  <Key Id="issuer_refresh_token_key" StorageReferenceId="B2C_1A_TokenEncryptionKeyContainer" />
+                </CryptographicKeys>
+                <UseTechnicalProfileForSessionManagement ReferenceId="SM-jwt-issuer" />
+              </TechnicalProfile>
             </TechnicalProfiles>
-        </ClaimsProvider>
+          </ClaimsProvider>
 
 
         <ClaimsProvider>
@@ -868,24 +874,17 @@
                     <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
                 </TechnicalProfile>
                 <TechnicalProfile Id="EnterPINClaimExchangeTechnicalProfile">
-                    <DisplayName>Phone</DisplayName>
+                    <DisplayName>PIN</DisplayName>
                     <Protocol Name="Proprietary"
                         Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
                     <Metadata>
-                        <Item Key="ContentDefinitionReferenceId">phoneSignUp</Item>
-                        <Item Key="ClaimsProviderSelectionDisplayType">TextLink</Item>
-                        <Item Key="UserMessageIfClaimsTransformationInvalidPhoneNumber">Please enter
-                            a valid phone number and country code.</Item>
+                        <Item Key="ContentDefinitionReferenceId">SelfAssertedContentDefinition</Item>
                     </Metadata>
-                    <CryptographicKeys>
-                        <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
-                    </CryptographicKeys>
                     <InputClaims>
                         <InputClaim ClaimTypeReferenceId="PIN" />
-                        <InputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
                     </InputClaims>
                     <OutputClaims>
-                        <OutputClaim ClaimTypeReferenceId="PIN" />
+                        <OutputClaim ClaimTypeReferenceId="PIN" Required="true"/>
                     </OutputClaims>
                     <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
                 </TechnicalProfile>
@@ -1057,8 +1056,40 @@
                     <OutputClaims>
                         <OutputClaim ClaimTypeReferenceId="countryCode" />
                         <OutputClaim ClaimTypeReferenceId="nationalNumber" />
+                        <OutputClaim ClaimTypeReferenceId="objectId" />
+                        <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
+                        <OutputClaim ClaimTypeReferenceId="displayname" />
+                        <OutputClaim ClaimTypeReferenceId="extension_UserPin" />
                     </OutputClaims>
+                    <ValidationTechnicalProfiles>
+                        <ValidationTechnicalProfile
+                            ReferenceId="CombineCountryCodeAndNationalNumber" />
+                        <ValidationTechnicalProfile ReferenceId="AAD-UserReadUsingPhoneNumber" />
+                    </ValidationTechnicalProfiles>
                 </TechnicalProfile>
+                <TechnicalProfile Id="AAD-UserReadUsingPhoneNumber">
+                    <Metadata>
+                      <Item Key="Operation">Read</Item>
+                      <Item Key="RaiseErrorIfClaimsPrincipalDoesNotExist">false</Item>
+                    </Metadata>
+                    <IncludeInSso>false</IncludeInSso>
+                    <InputClaims>
+                      <InputClaim ClaimTypeReferenceId="signInNames.phoneNumber" Required="true" />
+                    </InputClaims>
+                    <OutputClaims>
+                      <!-- Required claims -->
+                      <OutputClaim ClaimTypeReferenceId="authenticationSource" DefaultValue="localAccountAuthentication" />
+                      <OutputClaim ClaimTypeReferenceId="objectId" />
+          
+                      <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
+                      <OutputClaim ClaimTypeReferenceId="extension_UserPin" />
+          
+                      <!-- Optional claims -->
+                      <OutputClaim ClaimTypeReferenceId="displayname" />
+                      <OutputClaim ClaimTypeReferenceId="userPrincipalName" />
+                    </OutputClaims>
+                    <IncludeTechnicalProfile ReferenceId="AAD-Common" />
+                  </TechnicalProfile>
                 <TechnicalProfile Id="SignInWithPinOrPasswordCollector">
                     <DisplayName>Collect sign in option pin or password</DisplayName>
                     <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
@@ -1098,53 +1129,13 @@
                     </ClaimsExchanges>
                 </OrchestrationStep>
                 <OrchestrationStep Order="3" Type="ClaimsExchange">
-                    <Preconditions>
-                        <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-                            <Value>PinOrPassword</Value>
-                            <Value>PIN</Value>
-                            <Action>SkipThisOrchestrationStep</Action>
-                        </Precondition>
-                    </Preconditions>
-                    <ClaimsExchanges>
-                        <ClaimsExchange Id="SignInWithPASSWORD"
-                            TechnicalProfileReferenceId="LocalAccountSignUpWithLogonPhoneNumber" />
-                    </ClaimsExchanges>
-                    <!-- we will add password verification logic here -->
-                </OrchestrationStep>
-                <OrchestrationStep Order="4" Type="ClaimsExchange">
-                    <Preconditions>
-                        <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-                            <Value>PinOrPassword</Value>
-                            <Value>PASSWORD</Value>
-                            <Action>SkipThisOrchestrationStep</Action>
-                        </Precondition>
-                    </Preconditions>
                     <ClaimsExchanges>
                         <ClaimsExchange Id="EnterPINClaimExchange"
                             TechnicalProfileReferenceId="EnterPINClaimExchangeTechnicalProfile" />
                     </ClaimsExchanges>
                 </OrchestrationStep>
-                <OrchestrationStep Order="5" Type="ClaimsExchange">
-                    <Preconditions>
-                        <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
-                            <Value>PinOrPassword</Value>
-                            <Value>PASSWORD</Value>
-                            <Action>SkipThisOrchestrationStep</Action>
-                        </Precondition>
-                    </Preconditions>
-                    <ClaimsExchanges>
-                        <ClaimsExchange Id="AADReadUser"
-                            TechnicalProfileReferenceId="ReadUserByPhoneNumberTechnicalProfile" />
-                    </ClaimsExchanges>
-                </OrchestrationStep>
-                <OrchestrationStep Order="6" Type="ClaimsExchange">
-                    <ClaimsExchanges>
-                        <ClaimsExchange Id="AADUserReadWithObjectId"
-                            TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
-                    </ClaimsExchanges>
-                </OrchestrationStep>
                 <!-- phone section  -->
-                <OrchestrationStep Order="7" Type="SendClaims"
+                <OrchestrationStep Order="4" Type="SendClaims"
                     CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
             </OrchestrationSteps>
         </UserJourney>
@@ -1166,10 +1157,10 @@
             <OutputClaims>
                 <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
                 <OutputClaim ClaimTypeReferenceId="displayName" />
-                <OutputClaim ClaimTypeReferenceId="givenName" />
-                <OutputClaim ClaimTypeReferenceId="surname" />
+                <!-- <OutputClaim ClaimTypeReferenceId="givenName" />
+                <OutputClaim ClaimTypeReferenceId="surname" /> -->
                 <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
-                <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" />
+                <!-- <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" /> -->
                 <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true"
                     DefaultValue="{Policy:TenantObjectId}" />
             </OutputClaims>
