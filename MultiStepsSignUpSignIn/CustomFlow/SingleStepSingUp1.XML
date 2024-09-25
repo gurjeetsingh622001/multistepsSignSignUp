@@ -17,6 +17,10 @@
                 <DisplayName>unique object Id for subject of the claims being returned</DisplayName>
                 <DataType>string</DataType>
             </ClaimType>
+            <ClaimType Id="extension_phone">
+                <DisplayName>phone</DisplayName>
+                <DataType>string</DataType>
+            </ClaimType>
             <ClaimType Id="phoneNumber">
                 <DisplayName>Phone Number</DisplayName>
                 <DataType>string</DataType>
@@ -370,7 +374,7 @@
             </ClaimType>
             <ClaimType Id="extension_UserPin">
                 <DisplayName>User Pin</DisplayName>
-                <DataType>string</DataType>
+                <DataType>int</DataType>
                 <DefaultPartnerClaimTypes>
                     <Protocol Name="OAuth2" PartnerClaimType="extension_UserPin" />
                 </DefaultPartnerClaimTypes>
@@ -934,9 +938,9 @@
                         Handler="Web.TPEngine.Providers.AzureActiveDirectoryProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
                     <Metadata>
                         <!--Insert b2c-extensions-app application ID here, for example: 11111111-1111-1111-1111-111111111111-->
-                        <Item Key="ClientId">d1b35e86-42dd-4d98-9037-8e7b3a9c9e6e</Item>
+                        <Item Key="ClientId">62e2154b-5cf2-4b9f-8b98-2b74bad9c57e</Item>
                         <!--Insert b2c-extensions-app application ObjectId here, for example: 22222222-2222-2222-2222-222222222222-->
-                        <Item Key="ApplicationObjectId">0ba39419-676d-4688-b1e2-e71cb51d759a</Item>
+                        <Item Key="ApplicationObjectId">34b8d88c-88a1-4e30-b262-26efbbb49985</Item>
                     </Metadata>
                     <CryptographicKeys>
                         <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
@@ -956,6 +960,9 @@
                     <InputClaims>
                         <InputClaim ClaimTypeReferenceId="objectId" Required="true" />
                     </InputClaims>
+                    <PersistedClaims>
+                        <PersistedClaim ClaimTypeReferenceId="extension_UserPin" />
+                    </PersistedClaims>   
                     <OutputClaims>
                         <OutputClaim ClaimTypeReferenceId="objectId" />
                         <OutputClaim ClaimTypeReferenceId="signInNames.emailAddress" />
@@ -966,6 +973,7 @@
                         <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" />
                         <OutputClaim ClaimTypeReferenceId="hasFullProfile" DefaultValue="true"
                             AlwaysUseDefaultValue="true" />
+                        <OutputClaim ClaimTypeReferenceId="extension_UserPin" DefaultValue="1234" />
                     </OutputClaims>
                     <IncludeTechnicalProfile ReferenceId="AAD-Common" />
                 </TechnicalProfile>
@@ -1067,7 +1075,8 @@
                         <OutputClaim ClaimTypeReferenceId="objectId" />
                         <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
                         <OutputClaim ClaimTypeReferenceId="displayname" />
-                        <OutputClaim ClaimTypeReferenceId="extension_UserPin" />
+                        <OutputClaim ClaimTypeReferenceId="extension_UserPin" DefaultValue="0"/>
+                        
                     </OutputClaims>
                     <ValidationTechnicalProfiles>
                         <ValidationTechnicalProfile
@@ -1090,11 +1099,11 @@
                       <OutputClaim ClaimTypeReferenceId="objectId" />
           
                       <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
-                      <OutputClaim ClaimTypeReferenceId="extension_UserPin" />
           
                       <!-- Optional claims -->
                       <OutputClaim ClaimTypeReferenceId="displayname" />
-                      <OutputClaim ClaimTypeReferenceId="userPrincipalName" />
+                      <OutputClaim ClaimTypeReferenceId="userPrincipalName" /> 
+                      <OutputClaim ClaimTypeReferenceId="extension_UserPin" DefaultValue="1234"/>
                     </OutputClaims>
                     <IncludeTechnicalProfile ReferenceId="AAD-Common" />
                   </TechnicalProfile>
@@ -1112,7 +1121,7 @@
                     <OutputClaims>
                         <OutputClaim ClaimTypeReferenceId="countryCode" />
                         <OutputClaim ClaimTypeReferenceId="nationalNumber" />
-                        <OutputClaim ClaimTypeReferenceId="PinOrPassword" />
+                        <OutputClaim ClaimTypeReferenceId="PinOrPassword" /> 
                     </OutputClaims>
                 </TechnicalProfile>
             </TechnicalProfiles>
@@ -1165,7 +1174,7 @@
             <OutputClaims>
                 <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
                 <OutputClaim ClaimTypeReferenceId="displayName" />
-                <OutputClaim ClaimTypeReferenceId="extension_UserPin" />
+                <OutputClaim ClaimTypeReferenceId="extension_UserPin" /> 
                 <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
                 <!-- <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" /> -->
                 <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true"
