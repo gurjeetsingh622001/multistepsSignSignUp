@@ -31,6 +31,9 @@
             <ClaimType Id="isLocalAccountSignIn">
                 <DataType>boolean</DataType>
             </ClaimType>
+            <ClaimType Id="pinMatchResult">
+                <DataType>boolean</DataType>
+            </ClaimType>
             <ClaimType Id="displayName">
                 <DisplayName>Display Name</DisplayName>
                 <DataType>string</DataType>
@@ -368,18 +371,36 @@
             </ClaimType>
             <ClaimType Id="PIN">
                 <DisplayName>PIN</DisplayName>
-                <DataType>int</DataType>
+                <DataType>string</DataType>
                 <UserHelpText>Enter your pin</UserHelpText>
                 <UserInputType>TextBox</UserInputType>
             </ClaimType>
             <ClaimType Id="extension_UserPin">
                 <DisplayName>User Pin</DisplayName>
-                <DataType>int</DataType>
+                <DataType>string</DataType>
                 <DefaultPartnerClaimTypes>
                     <Protocol Name="OAuth2" PartnerClaimType="extension_UserPin" />
                 </DefaultPartnerClaimTypes>
                 <UserHelpText>Enter your PIN</UserHelpText>
             </ClaimType>
+            <ClaimType Id="PIN_String">
+                <DisplayName>PIN as String</DisplayName>
+                <DataType>string</DataType>
+                <DefaultPartnerClaimTypes>
+                    <Protocol Name="OAuth2" PartnerClaimType="PIN_String" />
+                </DefaultPartnerClaimTypes>
+                <UserHelpText>Converted PIN for comparison.</UserHelpText>
+            </ClaimType>
+            
+            <ClaimType Id="extension_UserPin_String">
+                <DisplayName>User PIN as String</DisplayName>
+                <DataType>string</DataType>
+                <DefaultPartnerClaimTypes>
+                    <Protocol Name="OAuth2" PartnerClaimType="extension_UserPin_String" />
+                </DefaultPartnerClaimTypes>
+                <UserHelpText>Converted extension_UserPin for comparison.</UserHelpText>
+            </ClaimType>
+            
         </ClaimsSchema>
         <Predicates>
             <Predicate Id="email" Method="MatchesRegex">
@@ -561,7 +582,51 @@
                     <InputParameter Id="valueToCompareTo" DataType="boolean" Value="true" />
                 </InputParameters>
             </ClaimsTransformation>
+            <!-- <ClaimsTransformation Id="ConvertUserPinToString" TransformationMethod="ConvertNumberToStringClaim">
+                <InputClaims>
+                    <InputClaim ClaimTypeReferenceId="extension_UserPin" TransformationClaimType="inputClaim" />
+                </InputClaims>
+                <OutputClaims>
+                    <OutputClaim ClaimTypeReferenceId="extension_UserPin_String" TransformationClaimType="outputClaim" />
+                </OutputClaims>
+            </ClaimsTransformation>
+            
+            <ClaimsTransformation Id="ConvertPINToString" TransformationMethod="ConvertNumberToStringClaim">
+                <InputClaims>
+                    <InputClaim ClaimTypeReferenceId="PIN" TransformationClaimType="inputClaim" />
+                </InputClaims>
+                <OutputClaims>
+                    <OutputClaim ClaimTypeReferenceId="PIN_String" TransformationClaimType="outputClaim" />
+                </OutputClaims>
+            </ClaimsTransformation> -->
+            
+            <ClaimsTransformation Id="ComparePin" TransformationMethod="CompareClaims">
+                <InputClaims>
+                    <InputClaim ClaimTypeReferenceId="extension_UserPin" TransformationClaimType="inputClaim1" />
+                    <InputClaim ClaimTypeReferenceId="PIN" TransformationClaimType="inputClaim2" />
+                  </InputClaims>
+                  <InputParameters>
+                    <InputParameter Id="operator" DataType="string" Value="EQUAL" />
+                    <InputParameter Id="ignoreCase" DataType="string" Value="true" />
+                  </InputParameters>
+                  <OutputClaims>
+                    <OutputClaim ClaimTypeReferenceId="pinMatchResult" TransformationClaimType="outputClaim" />
+                  </OutputClaims>
+            </ClaimsTransformation>
 
+            <!-- <ClaimsTransformation Id="ComparePin" TransformationMethod="AssertNumber">
+                <InputClaims>
+                    <InputClaim ClaimTypeReferenceId="PIN" TransformationClaimType="inputClaim" /> 
+                </InputClaims>
+                <InputParameters>
+                    <InputParameter Id="operator" DataType="string" Value="EQUAL" />
+                    <InputParameter Id="CompareToValue" DataType="int" Value="@{extension_UserPin}" />
+                </InputParameters>
+                <OutputClaims>
+                    <OutputClaim ClaimTypeReferenceId="pinMatchResult" TransformationClaimType="outputClaim" />
+                </OutputClaims>
+            </ClaimsTransformation> -->
+            
         </ClaimsTransformations>
         <ContentDefinitions>
             <ContentDefinition Id="SelfAssertedContentDefinition">
@@ -891,7 +956,11 @@
                     </InputClaims>
                     <OutputClaims>
                         <OutputClaim ClaimTypeReferenceId="PIN" Required="true"/>
+                        <OutputClaim ClaimTypeReferenceId="pinMatchResult" DefaultValue="false"/>
                     </OutputClaims>
+                    <OutputClaimsTransformations>
+                        <OutputClaimsTransformation ReferenceId="ComparePin" />
+                    </OutputClaimsTransformations>
                     <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
                 </TechnicalProfile>
 
@@ -1176,6 +1245,7 @@
                 <OutputClaim ClaimTypeReferenceId="displayName" />
                 <OutputClaim ClaimTypeReferenceId="extension_UserPin" /> 
                 <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
+                <OutputClaim ClaimTypeReferenceId="pinMatchResult" />
                 <!-- <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" /> -->
                 <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true"
                     DefaultValue="{Policy:TenantObjectId}" />
