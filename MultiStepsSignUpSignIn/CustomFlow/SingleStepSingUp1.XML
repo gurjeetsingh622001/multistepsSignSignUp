@@ -1170,6 +1170,7 @@
                         <ValidationTechnicalProfile
                             ReferenceId="CombineCountryCodeAndNationalNumber" />
                         <ValidationTechnicalProfile ReferenceId="AAD-UserReadUsingPhoneNumber" />
+                        <ValidationTechnicalProfile ReferenceId="AAD-UserDiscoveryUsingLogonPhoneNumber-FullProfile" />
                     </ValidationTechnicalProfiles>
                 </TechnicalProfile>
                 <TechnicalProfile Id="AAD-UserReadUsingPhoneNumber">
@@ -1211,9 +1212,7 @@
                         <OutputClaim ClaimTypeReferenceId="nationalNumber" />
                         <OutputClaim ClaimTypeReferenceId="PinOrPassword" /> 
                     </OutputClaims>
-                    <ValidationTechnicalProfiles>
-                        <ValidationTechnicalProfile ReferenceId="AAD-UserDiscoveryUsingLogonPhoneNumber-FullProfile" />
-                    </ValidationTechnicalProfiles>
+                    
                 </TechnicalProfile>
             </TechnicalProfiles>
         </ClaimsProvider>
