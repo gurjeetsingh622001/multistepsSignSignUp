@@ -1211,6 +1211,9 @@
                         <OutputClaim ClaimTypeReferenceId="nationalNumber" />
                         <OutputClaim ClaimTypeReferenceId="PinOrPassword" /> 
                     </OutputClaims>
+                    <ValidationTechnicalProfiles>
+                        <ValidationTechnicalProfile ReferenceId="AAD-UserDiscoveryUsingLogonPhoneNumber-FullProfile" />
+                    </ValidationTechnicalProfiles>
                 </TechnicalProfile>
             </TechnicalProfiles>
         </ClaimsProvider>
