@@ -383,24 +383,6 @@
                 </DefaultPartnerClaimTypes>
                 <UserHelpText>Enter your PIN</UserHelpText>
             </ClaimType>
-            <ClaimType Id="PIN_String">
-                <DisplayName>PIN as String</DisplayName>
-                <DataType>string</DataType>
-                <DefaultPartnerClaimTypes>
-                    <Protocol Name="OAuth2" PartnerClaimType="PIN_String" />
-                </DefaultPartnerClaimTypes>
-                <UserHelpText>Converted PIN for comparison.</UserHelpText>
-            </ClaimType>
-            
-            <ClaimType Id="extension_UserPin_String">
-                <DisplayName>User PIN as String</DisplayName>
-                <DataType>string</DataType>
-                <DefaultPartnerClaimTypes>
-                    <Protocol Name="OAuth2" PartnerClaimType="extension_UserPin_String" />
-                </DefaultPartnerClaimTypes>
-                <UserHelpText>Converted extension_UserPin for comparison.</UserHelpText>
-            </ClaimType>
-            
         </ClaimsSchema>
         <Predicates>
             <Predicate Id="email" Method="MatchesRegex">
@@ -612,6 +594,17 @@
                   <OutputClaims>
                     <OutputClaim ClaimTypeReferenceId="pinMatchResult" TransformationClaimType="outputClaim" />
                   </OutputClaims>
+            </ClaimsTransformation>
+
+            <ClaimsTransformation Id="AssertPinMatchResultIsTrue"
+                TransformationMethod="AssertBooleanClaimIsEqualToValue">
+                <InputClaims>
+                    <InputClaim ClaimTypeReferenceId="pinMatchResult"
+                        TransformationClaimType="inputClaim" />
+                </InputClaims>
+                <InputParameters>
+                    <InputParameter Id="valueToCompareTo" DataType="boolean" Value="true" />
+                </InputParameters>
             </ClaimsTransformation>
 
             <!-- <ClaimsTransformation Id="ComparePin" TransformationMethod="AssertNumber">
@@ -950,6 +943,7 @@
                         Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
                     <Metadata>
                         <Item Key="ContentDefinitionReferenceId">SelfAssertedContentDefinition</Item>
+                        <Item Key="UserMessageIfClaimsTransformationBooleanValueIsNotEqual">The PIN you entered is incorrect.</Item>
                     </Metadata>
                     <InputClaims>
                         <InputClaim ClaimTypeReferenceId="PIN" />
@@ -958,12 +952,37 @@
                         <OutputClaim ClaimTypeReferenceId="PIN" Required="true"/>
                         <OutputClaim ClaimTypeReferenceId="pinMatchResult" DefaultValue="false"/>
                     </OutputClaims>
-                    <OutputClaimsTransformations>
-                        <OutputClaimsTransformation ReferenceId="ComparePin" />
-                    </OutputClaimsTransformations>
+                    <ValidationTechnicalProfiles>
+                        <ValidationTechnicalProfile ReferenceId="ComparePinTechincalProfile" />
+                        <ValidationTechnicalProfile ReferenceId="AssertPinMatchResultBoolean" />
+                    </ValidationTechnicalProfiles>
                     <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
                 </TechnicalProfile>
 
+                <TechnicalProfile Id="ComparePinTechincalProfile">
+                    <DisplayName>Combine country code and national number</DisplayName>
+                    <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+                    <InputClaimsTransformations>
+                      <InputClaimsTransformation ReferenceId="ComparePin" />
+                    </InputClaimsTransformations>
+                    <OutputClaims>
+                      <OutputClaim ClaimTypeReferenceId="pinMatchResult" />
+                    </OutputClaims>
+                    <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+                  </TechnicalProfile>
+
+                <TechnicalProfile Id="AssertPinMatchResultBoolean">
+                    <DisplayName>Unit test</DisplayName>
+                    <Protocol Name="Proprietary"
+                        Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+                    <OutputClaims>
+                        <OutputClaim ClaimTypeReferenceId="pinMatchResult" DefaultValue="false" />
+                    </OutputClaims>
+                    <OutputClaimsTransformations>
+                        <OutputClaimsTransformation ReferenceId="AssertPinMatchResultIsTrue" />
+                    </OutputClaimsTransformations>
+                    <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+                </TechnicalProfile>
             </TechnicalProfiles>
         </ClaimsProvider>
 
