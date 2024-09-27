@@ -374,6 +374,9 @@
                 <DataType>string</DataType>
                 <UserHelpText>Enter your pin</UserHelpText>
                 <UserInputType>TextBox</UserInputType>
+                <Restriction>
+                   <Pattern RegularExpression="^[0-9]{1,15}$" HelpText="Please enter digits" />
+               </Restriction>
             </ClaimType>
             <ClaimType Id="extension_UserPin">
                 <DisplayName>User Pin</DisplayName>
@@ -1265,8 +1268,8 @@
                 <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
                 <OutputClaim ClaimTypeReferenceId="displayName" />
                 <OutputClaim ClaimTypeReferenceId="extension_UserPin" /> 
-                <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
-                <OutputClaim ClaimTypeReferenceId="pinMatchResult" />
+                <!-- <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
+                <OutputClaim ClaimTypeReferenceId="pinMatchResult" /> -->
                 <!-- <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" /> -->
                 <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true"
                     DefaultValue="{Policy:TenantObjectId}" />
