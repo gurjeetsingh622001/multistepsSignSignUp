@@ -345,6 +345,23 @@
                 <Pattern RegularExpression="^[0-9]{1,15}$" HelpText="Please enter digits" />
               </Restriction-->
             </ClaimType>
+            <ClaimType Id="extension_TPlusUserType">
+                <DisplayName>Select</DisplayName>
+                <DataType>string</DataType>
+                <UserInputType>RadioSingleSelect</UserInputType>
+                <Restriction>
+                    <Enumeration Text="User" Value="User" SelectByDefault="true" />
+                    <Enumeration Text="Merchant" Value="Merchant" SelectByDefault="false" />
+                </Restriction>
+            </ClaimType>
+            <ClaimType Id="permissions">
+                <DisplayName>Permissions</DisplayName>
+                <DataType>string</DataType>
+              </ClaimType>
+              <ClaimType Id="userLanguage">
+                <DisplayName>User UI language (used by REST API to return localized error messages)</DisplayName>
+                <DataType>string</DataType>
+              </ClaimType>
         </ClaimsSchema>
         <Predicates>
             <Predicate Id="email" Method="MatchesRegex">
@@ -600,6 +617,39 @@
     <!--Claims Providers Here-->
     <ClaimsProviders>
         <ClaimsProvider>
+            <DisplayName>REST APIs</DisplayName>
+            <TechnicalProfiles>
+              <TechnicalProfile Id="REST-EnrichToken">
+                <DisplayName>Get user extended profile Azure Function web hook</DisplayName>
+                <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+                <Metadata>
+                  <!-- Set the ServiceUrl with your own REST API endpoint -->
+                  <Item Key="ServiceUrl">https://8032-2409-40d1-dc-6ae2-8da0-d64f-2407-7750.ngrok-free.app/api/Account/EnrichToken</Item>
+                  <Item Key="SendClaimsIn">Body</Item>
+                  <!-- Set AuthenticationType to Basic or ClientCertificate in production environments -->
+                  <Item Key="AuthenticationType">Basic</Item>
+                  <!-- REMOVE the following line in production environments -->
+                  <Item Key="AllowInsecureAuthInProduction">false</Item>
+                </Metadata>
+                <CryptographicKeys>
+                  <Key Id="BasicAuthenticationUsername" StorageReferenceId="B2C_1A_RestApiUsername" />
+                  <Key Id="BasicAuthenticationPassword" StorageReferenceId="B2C_1A_RestApiPassword" />
+                </CryptographicKeys>
+                <InputClaims>
+                  <!-- Claims sent to your REST API -->
+                  <InputClaim ClaimTypeReferenceId="objectId" />
+                  <InputClaim ClaimTypeReferenceId="extension_TPlusUserType" />
+                  <InputClaim ClaimTypeReferenceId="userLanguage" PartnerClaimType="lang" DefaultValue="{Culture:LCID}" AlwaysUseDefaultValue="true" />
+                </InputClaims>
+                <OutputClaims>
+                  <!-- Claims parsed from your REST API -->
+                  <OutputClaim ClaimTypeReferenceId="permissions" />
+                </OutputClaims>
+                <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+              </TechnicalProfile>
+            </TechnicalProfiles>
+          </ClaimsProvider>
+        <ClaimsProvider>
             <DisplayName>Token Issuer</DisplayName>
             <TechnicalProfiles>
                 <TechnicalProfile Id="JwtIssuer">
@@ -664,6 +714,20 @@
                         <ValidationTechnicalProfile ReferenceId="AzureMfa-SendSms"/>
                     </ValidationTechnicalProfiles>
                     <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" /> 
+                </TechnicalProfile>
+                <TechnicalProfile Id="UserTypeInformationCollector">
+                    <DisplayName>Collect User Type Input Technical Profile</DisplayName>
+                    <Protocol Name="Proprietary"
+                        Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+                    <Metadata>
+                        <Item Key="ContentDefinitionReferenceId">SelfAssertedContentDefinition</Item>
+                    </Metadata>
+                    <DisplayClaims>
+                        <DisplayClaim ClaimTypeReferenceId="extension_TPlusUserType" Required="true" />
+                    </DisplayClaims>
+                    <OutputClaims>
+                        <OutputClaim ClaimTypeReferenceId="extension_TPlusUserType" />
+                    </OutputClaims>
                 </TechnicalProfile>
                 <TechnicalProfile Id="LocalAccountSignUpWithLogonPhoneNumber">
                     <DisplayName>Phone</DisplayName>
@@ -1000,24 +1064,35 @@
                 <!-- phone section  -->
                 <OrchestrationStep Order="1" Type="ClaimsExchange">
                     <ClaimsExchanges>
+                        <ClaimsExchange Id="GetUserTypeInformationClaimsExchange"
+                            TechnicalProfileReferenceId="UserTypeInformationCollector" />
+                    </ClaimsExchanges>
+                </OrchestrationStep>
+                <OrchestrationStep Order="2" Type="ClaimsExchange">
+                    <ClaimsExchanges>
                         <ClaimsExchange Id="SignUpWithPhoneCollector"
                             TechnicalProfileReferenceId="LocalAccountSignUpWithLogonPhoneNumberCollector" />
                     </ClaimsExchanges>
                 </OrchestrationStep>
-                <OrchestrationStep Order="2" Type="ClaimsExchange">
+                <OrchestrationStep Order="3" Type="ClaimsExchange">
                     <ClaimsExchanges>
                         <ClaimsExchange Id="SignUpWithPhone"
                             TechnicalProfileReferenceId="LocalAccountSignUpWithLogonPhoneNumber" />
                     </ClaimsExchanges>
                 </OrchestrationStep>
-                <OrchestrationStep Order="3" Type="ClaimsExchange">
+                <OrchestrationStep Order="4" Type="ClaimsExchange">
                     <ClaimsExchanges>
                         <ClaimsExchange Id="AADUserReadWithObjectId"
                             TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
                     </ClaimsExchanges>
                 </OrchestrationStep>
                 <!-- phone section  -->
-                <OrchestrationStep Order="4" Type="SendClaims"
+                <OrchestrationStep Order="5" Type="ClaimsExchange">
+                    <ClaimsExchanges>
+                      <ClaimsExchange Id="RESTEnrichToken" TechnicalProfileReferenceId="REST-EnrichToken" />
+                    </ClaimsExchanges>
+                </OrchestrationStep>
+                <OrchestrationStep Order="6" Type="SendClaims"
                     CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
             </OrchestrationSteps>
         </UserJourney>
@@ -1041,6 +1116,8 @@
                 <OutputClaim ClaimTypeReferenceId="displayName" />
                 <OutputClaim ClaimTypeReferenceId="givenName" />
                 <OutputClaim ClaimTypeReferenceId="surname" />
+                <OutputClaim ClaimTypeReferenceId="extension_TPlusUserType" />
+                <OutputClaim ClaimTypeReferenceId="permissions" />
                 <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
                 <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" />
                 <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true"
