@@ -374,9 +374,7 @@
                 <DataType>string</DataType>
                 <UserHelpText>Enter your pin</UserHelpText>
                 <UserInputType>TextBox</UserInputType>
-                <Restriction>
-                   <Pattern RegularExpression="^[0-9]{1,15}$" HelpText="Please enter digits" />
-               </Restriction>
+                <PredicateValidationReference Id="UserPinValidation" />
             </ClaimType>
             <ClaimType Id="PASSWORD">
                 <DisplayName>PASSWORD</DisplayName>
@@ -438,6 +436,17 @@
                     <Parameter Id="RegularExpression">^[^\\+]+$</Parameter>
                 </Parameters>
             </Predicate>
+            <Predicate Id="IsLengthBetween4And6" Method="IsLengthRange" HelpText="The pin must be between 4 and 6 characters.">
+                <Parameters>
+                  <Parameter Id="Minimum">4</Parameter>
+                  <Parameter Id="Maximum">6</Parameter>
+                </Parameters>
+            </Predicate>
+            <Predicate Id="PIN" Method="MatchesRegex" HelpText="The pin must be numbers only.">
+                <Parameters>
+                  <Parameter Id="RegularExpression">^[0-9]+$</Parameter>
+                </Parameters>
+              </Predicate>
         </Predicates>
         <PredicateValidations>
             <PredicateValidation Id="email">
@@ -480,6 +489,20 @@
                         <UserHelpText>Please enter a valid phone number.</UserHelpText>
                         <PredicateReferences>
                             <PredicateReference Id="internationalOrNationalPhoneNumber" />
+                        </PredicateReferences>
+                    </PredicateGroup>
+                </PredicateGroups>
+            </PredicateValidation>
+            <PredicateValidation Id="UserPinValidation">
+                <PredicateGroups>
+                    <PredicateGroup Id="IsLengthBetween4And6Group">
+                        <PredicateReferences>
+                            <PredicateReference Id="IsLengthBetween4And6"/>
+                        </PredicateReferences>
+                    </PredicateGroup>
+                    <PredicateGroup Id="PINGroup">
+                        <PredicateReferences>
+                            <PredicateReference Id="PIN"/>
                         </PredicateReferences>
                     </PredicateGroup>
                 </PredicateGroups>
@@ -1125,7 +1148,7 @@
                         <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" />
                         <OutputClaim ClaimTypeReferenceId="hasFullProfile" DefaultValue="true"
                             AlwaysUseDefaultValue="true" />
-                        <OutputClaim ClaimTypeReferenceId="extension_UserPin" DefaultValue="1234" />
+                        <OutputClaim ClaimTypeReferenceId="extension_UserPin" DefaultValue="0" />
                     </OutputClaims>
                     <IncludeTechnicalProfile ReferenceId="AAD-Common" />
                 </TechnicalProfile>
@@ -1256,7 +1279,7 @@
                       <!-- Optional claims -->
                       <OutputClaim ClaimTypeReferenceId="displayname" />
                       <OutputClaim ClaimTypeReferenceId="userPrincipalName" /> 
-                      <OutputClaim ClaimTypeReferenceId="extension_UserPin" DefaultValue="1234"/>
+                      <OutputClaim ClaimTypeReferenceId="extension_UserPin" DefaultValue="0"/>
                     </OutputClaims>
                     <IncludeTechnicalProfile ReferenceId="AAD-Common" />
                   </TechnicalProfile>
@@ -1313,6 +1336,13 @@
                     </ClaimsExchanges>
                 </OrchestrationStep>
                 <OrchestrationStep Order="4" Type="ClaimsExchange">
+                    <Preconditions>
+                        <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+                          <Value>PinOrPassword</Value>
+                          <Value>PIN</Value>
+                          <Action>SkipThisOrchestrationStep</Action>
+                        </Precondition>
+                    </Preconditions>
                     <ClaimsExchanges>
                         <ClaimsExchange Id="EnterPASSWORDClaimExchange"
                             TechnicalProfileReferenceId="EnterPASSWORDClaimExchangeTechnicalProfile" />
@@ -1341,9 +1371,9 @@
             <OutputClaims>
                 <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
                 <OutputClaim ClaimTypeReferenceId="displayName" />
-                <OutputClaim ClaimTypeReferenceId="extension_UserPin" /> 
-                 <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
-                <!-- <OutputClaim ClaimTypeReferenceId="pinMatchResult" /> -->
+                <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
+                <!-- <OutputClaim ClaimTypeReferenceId="extension_UserPin" /> 
+                <OutputClaim ClaimTypeReferenceId="pinMatchResult" /> -->
                 <!-- <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" /> -->
                 <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true"
                     DefaultValue="{Policy:TenantObjectId}" />
