@@ -378,6 +378,12 @@
                    <Pattern RegularExpression="^[0-9]{1,15}$" HelpText="Please enter digits" />
                </Restriction>
             </ClaimType>
+            <ClaimType Id="PASSWORD">
+                <DisplayName>PASSWORD</DisplayName>
+                <DataType>string</DataType>
+                <UserHelpText>Enter your password</UserHelpText>
+                <UserInputType>TextBox</UserInputType>
+            </ClaimType>
             <ClaimType Id="extension_UserPin">
                 <DisplayName>User Pin</DisplayName>
                 <DataType>string</DataType>
@@ -717,6 +723,45 @@
             </TechnicalProfiles>
           </ClaimsProvider>
 
+          <ClaimsProvider>
+            <DisplayName>OpenID Connect Technical Profiles</DisplayName>
+            <TechnicalProfiles>
+                <TechnicalProfile Id="SignInWithPassword">
+                    <DisplayName>Sign in with Local Account</DisplayName>
+                    <Protocol Name="OpenIdConnect" />
+                    <Metadata>
+                        <Item Key="UserMessageIfClaimsPrincipalDoesNotExist">We didn't find this account</Item>
+                        <Item Key="UserMessageIfInvalidPassword">Your password or username is incorrect</Item>
+                        <Item Key="UserMessageIfOldPasswordUsed">You've used an old password.</Item>
+                        <Item Key="ProviderName">https://sts.windows.net/</Item>
+                        <Item Key="METADATA">https://login.microsoftonline.com/{tenant}/.well-known/openid-configuration</Item>
+                        <Item Key="authorization_endpoint">https://login.microsoftonline.com/{tenant}/oauth2/token</Item>
+                        <Item Key="response_types">id_token</Item>
+                        <Item Key="response_mode">query</Item>
+                        <Item Key="scope">phone openid</Item>
+                        <!-- Policy Engine Clients -->
+                        <Item Key="UsePolicyInRedirectUri">false</Item>
+                        <Item Key="HttpBinding">POST</Item>
+                        <Item Key="client_id">1427fe94-7377-4d1f-8354-fe9b37ed9f53</Item>
+                        <!-- proxy app id  -->
+                        <Item Key="IdTokenAudience">18cd596a-1a3b-408c-b25e-2033a7df6ea9</Item>
+                        <!-- Identity Experience Framework application app id  -->
+                    </Metadata>
+                    <InputClaims>
+                        <InputClaim ClaimTypeReferenceId="signInNames.phoneNumber" PartnerClaimType="signInNames.phoneNumber" Required="true" />
+                        <InputClaim ClaimTypeReferenceId="PASSWORD" PartnerClaimType="PASSWORD" Required="true" />
+                        <InputClaim ClaimTypeReferenceId="grant_type" DefaultValue="password" />
+                        <InputClaim ClaimTypeReferenceId="scope" DefaultValue="openid" />
+                        <InputClaim ClaimTypeReferenceId="nca" PartnerClaimType="nca" DefaultValue="1" /> 
+                    </InputClaims>
+                    <OutputClaims>
+                        <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="oid" />
+                    </OutputClaims>
+                </TechnicalProfile>
+                
+            </TechnicalProfiles>
+        </ClaimsProvider>
+
 
         <ClaimsProvider>
             <DisplayName>Local Account Sign Up and In With Phone</DisplayName>
@@ -961,7 +1006,23 @@
                     </ValidationTechnicalProfiles>
                     <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
                 </TechnicalProfile>
-
+                <TechnicalProfile Id="EnterPASSWORDClaimExchangeTechnicalProfile">
+                    <DisplayName>PIN</DisplayName>
+                    <Protocol Name="Proprietary"
+                        Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+                    <Metadata>
+                        <Item Key="ContentDefinitionReferenceId">SelfAssertedContentDefinition</Item> 
+                    </Metadata>
+                    <InputClaims>
+                        <InputClaim ClaimTypeReferenceId="PASSWORD" />
+                    </InputClaims>
+                    <OutputClaims>
+                        <OutputClaim ClaimTypeReferenceId="PASSWORD" Required="true"/>
+                    </OutputClaims>
+                    <ValidationTechnicalProfiles>
+                        <ValidationTechnicalProfile ReferenceId="SignInWithPassword" />
+                    </ValidationTechnicalProfiles> 
+                </TechnicalProfile>
                 <TechnicalProfile Id="ComparePinTechincalProfile">
                     <DisplayName>Combine country code and national number</DisplayName>
                     <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
@@ -1239,13 +1300,26 @@
                     </ClaimsExchanges>
                 </OrchestrationStep>
                 <OrchestrationStep Order="3" Type="ClaimsExchange">
+                    <Preconditions>
+                        <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+                          <Value>PinOrPassword</Value>
+                          <Value>PASSWORD</Value>
+                          <Action>SkipThisOrchestrationStep</Action>
+                        </Precondition>
+                    </Preconditions>
                     <ClaimsExchanges>
                         <ClaimsExchange Id="EnterPINClaimExchange"
                             TechnicalProfileReferenceId="EnterPINClaimExchangeTechnicalProfile" />
                     </ClaimsExchanges>
                 </OrchestrationStep>
+                <OrchestrationStep Order="4" Type="ClaimsExchange">
+                    <ClaimsExchanges>
+                        <ClaimsExchange Id="EnterPASSWORDClaimExchange"
+                            TechnicalProfileReferenceId="EnterPASSWORDClaimExchangeTechnicalProfile" />
+                    </ClaimsExchanges>
+                </OrchestrationStep>
                 <!-- phone section  -->
-                <OrchestrationStep Order="4" Type="SendClaims"
+                <OrchestrationStep Order="5" Type="SendClaims"
                     CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
             </OrchestrationSteps>
         </UserJourney>
@@ -1268,8 +1342,8 @@
                 <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
                 <OutputClaim ClaimTypeReferenceId="displayName" />
                 <OutputClaim ClaimTypeReferenceId="extension_UserPin" /> 
-                <!-- <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
-                <OutputClaim ClaimTypeReferenceId="pinMatchResult" /> -->
+                 <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
+                <!-- <OutputClaim ClaimTypeReferenceId="pinMatchResult" /> -->
                 <!-- <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" /> -->
                 <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true"
                     DefaultValue="{Policy:TenantObjectId}" />
