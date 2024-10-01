@@ -754,7 +754,7 @@
                     <Protocol Name="OpenIdConnect" />
                     <Metadata>
                         <Item Key="UserMessageIfClaimsPrincipalDoesNotExist">We didn't find this account</Item>
-                        <Item Key="UserMessageIfInvalidPassword">Your password or username is incorrect</Item>
+                        <Item Key="UserMessageIfInvalidPassword">Your phone number or password is incorrect</Item>
                         <Item Key="UserMessageIfOldPasswordUsed">You've used an old password.</Item>
                         <Item Key="ProviderName">https://sts.windows.net/</Item>
                         <Item Key="METADATA">https://login.microsoftonline.com/{tenant}/.well-known/openid-configuration</Item>
@@ -771,11 +771,13 @@
                         <!-- Identity Experience Framework application app id  -->
                     </Metadata>
                     <InputClaims>
-                        <InputClaim ClaimTypeReferenceId="signInNames.phoneNumber" PartnerClaimType="signInNames.phoneNumber" Required="true" />
+                        <InputClaim ClaimTypeReferenceId="signInNames.phoneNumber" PartnerClaimType="username" Required="true"  />
                         <InputClaim ClaimTypeReferenceId="PASSWORD" PartnerClaimType="PASSWORD" Required="true" />
                         <InputClaim ClaimTypeReferenceId="grant_type" DefaultValue="password" />
                         <InputClaim ClaimTypeReferenceId="scope" DefaultValue="openid" />
-                        <InputClaim ClaimTypeReferenceId="nca" PartnerClaimType="nca" DefaultValue="1" /> 
+                        <InputClaim ClaimTypeReferenceId="nca" PartnerClaimType="nca" DefaultValue="1" />
+                        <InputClaim ClaimTypeReferenceId="client_id" DefaultValue="1427fe94-7377-4d1f-8354-fe9b37ed9f53" />
+                        <InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="18cd596a-1a3b-408c-b25e-2033a7df6ea9" />
                     </InputClaims>
                     <OutputClaims>
                         <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="oid" />
