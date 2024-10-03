@@ -27,7 +27,7 @@
                 <UserHelpText>Enter Phone Number</UserHelpText>
                 <UserInputType>TextBox</UserInputType>
                 <PredicateValidationReference Id="internationalOrNationalPhoneNumber" />
-            </ClaimType>
+            </ClaimType> 
             <ClaimType Id="isLocalAccountSignIn">
                 <DataType>boolean</DataType>
             </ClaimType>
@@ -319,12 +319,24 @@
                     <Enumeration Text="Zimbabwe(+263)" Value="ZW" />
                 </Restriction>
             </ClaimType>
+            <ClaimType Id="readOnlyCountryCode">
+                <DisplayName>Country</DisplayName>
+                <DataType>string</DataType>
+                <UserHelpText/>
+                <UserInputType>Readonly</UserInputType>
+            </ClaimType>
             <ClaimType Id="nationalNumber">
                 <DisplayName>Phone Number</DisplayName>
                 <DataType>string</DataType>
                 <UserHelpText>Enter National Phone Number</UserHelpText>
                 <UserInputType>TextBox</UserInputType>
                 <PredicateValidationReference Id="nationalNumber" />
+            </ClaimType>
+            <ClaimType Id="readOnlyNationalNumber">
+                <DisplayName>Phone Number</DisplayName>
+                <DataType>string</DataType>
+                <UserHelpText/>
+                <UserInputType>Readonly</UserInputType>
             </ClaimType>
             <ClaimType Id="upnUserName">
                 <DisplayName>UPN User Name</DisplayName>
@@ -573,6 +585,28 @@
                 <OutputClaims>
                     <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber"
                         TransformationClaimType="outputClaim" />
+                </OutputClaims>
+            </ClaimsTransformation>
+            <ClaimsTransformation Id="CreateReadonlyNationalNumberClaim" TransformationMethod="FormatStringClaim">
+                <InputClaims>
+                    <InputClaim ClaimTypeReferenceId="nationalNumber" TransformationClaimType="inputClaim"/>
+                </InputClaims>
+                <InputParameters>
+                    <InputParameter Id="stringFormat" DataType="string" Value="{0}"/>
+                </InputParameters>
+                <OutputClaims>
+                    <OutputClaim ClaimTypeReferenceId="readOnlyNationalNumber" TransformationClaimType="outputClaim"/>
+                </OutputClaims>
+            </ClaimsTransformation>
+            <ClaimsTransformation Id="CreateReadonlyCountryCodeClaim" TransformationMethod="FormatStringClaim">
+                <InputClaims>
+                    <InputClaim ClaimTypeReferenceId="countryCode" TransformationClaimType="inputClaim"/>
+                </InputClaims>
+                <InputParameters>
+                    <InputParameter Id="stringFormat" DataType="string" Value="{0}"/>
+                </InputParameters>
+                <OutputClaims>
+                    <OutputClaim ClaimTypeReferenceId="readOnlyCountryCode" TransformationClaimType="outputClaim"/>
                 </OutputClaims>
             </ClaimsTransformation>
             <ClaimsTransformation Id="CheckIfStrongAuthEmailExists"
@@ -1242,10 +1276,10 @@
                     <Metadata>
                         <Item Key="ContentDefinitionReferenceId">SelfAssertedContentDefinition</Item>
                     </Metadata>
-                    <InputClaims>
-                      <InputClaim ClaimTypeReferenceId="countryCode" />
-                      <InputClaim ClaimTypeReferenceId="nationalNumber" />
-                    </InputClaims>
+                    <DisplayClaims>
+                      <DisplayClaim  ClaimTypeReferenceId="countryCode" Required="true" />
+                      <DisplayClaim  ClaimTypeReferenceId="nationalNumber" Required="true" />
+                    </DisplayClaims>
                     <OutputClaims>
                         <OutputClaim ClaimTypeReferenceId="countryCode" />
                         <OutputClaim ClaimTypeReferenceId="nationalNumber" />
@@ -1253,8 +1287,11 @@
                         <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
                         <OutputClaim ClaimTypeReferenceId="displayname" />
                         <OutputClaim ClaimTypeReferenceId="extension_UserPin" DefaultValue="0"/>
-                        
                     </OutputClaims>
+                    <OutputClaimsTransformations>
+                        <OutputClaimsTransformation  ReferenceId="CreateReadonlyNationalNumberClaim" />
+                        <OutputClaimsTransformation  ReferenceId="CreateReadonlyCountryCodeClaim" />
+                    </OutputClaimsTransformations>
                     <ValidationTechnicalProfiles>
                         <ValidationTechnicalProfile
                             ReferenceId="CombineCountryCodeAndNationalNumber" />
@@ -1292,10 +1329,14 @@
                         <Item Key="ContentDefinitionReferenceId">SelfAssertedContentDefinition</Item>
                     </Metadata>
                     <InputClaims>
-                      <InputClaim ClaimTypeReferenceId="countryCode" />
-                      <InputClaim ClaimTypeReferenceId="nationalNumber" />
-                      <InputClaim ClaimTypeReferenceId="PinOrPassword" />
+                        <InputClaim ClaimTypeReferenceId="readOnlyCountryCode" />
+                        <InputClaim ClaimTypeReferenceId="readOnlyNationalNumber" />
                     </InputClaims>
+                    <DisplayClaims>
+                      <DisplayClaim ClaimTypeReferenceId="readOnlyCountryCode" />
+                      <DisplayClaim ClaimTypeReferenceId="readOnlyNationalNumber" />
+                      <DisplayClaim ClaimTypeReferenceId="PinOrPassword" />
+                    </DisplayClaims>
                     <OutputClaims>
                         <OutputClaim ClaimTypeReferenceId="countryCode" />
                         <OutputClaim ClaimTypeReferenceId="nationalNumber" />
