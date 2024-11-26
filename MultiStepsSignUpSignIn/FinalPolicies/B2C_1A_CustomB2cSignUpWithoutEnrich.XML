@@ -3,8 +3,8 @@
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06"
     PolicySchemaVersion="0.3.0.0" TenantId="tplussupport.onmicrosoft.com"
-    PolicyId="B2C_1A_CustomB2cSignUp"
-    PublicPolicyUri="http://tplussupport.onmicrosoft.com/B2C_1A_CustomB2cSignUp">
+    PolicyId="B2C_1A_CustomB2cSignUpWithoutEnrich"
+    PublicPolicyUri="http://tplussupport.onmicrosoft.com/B2C_1A_CustomB2cSignUpWithoutEnrich">
 
     <BasePolicy>
         <TenantId>tplussupport.onmicrosoft.com</TenantId>
@@ -589,7 +589,7 @@
         <Localization Enabled="true">
             <LocalizedResources Id="phoneSignUp.en">
                 <LocalizedStrings>
-                  <LocalizedString ElementType="UxElement" StringId="initial_intro">Please vl̥erify your country code and phone number</LocalizedString>
+                  <LocalizedString ElementType="UxElement" StringId="initial_intro">Please verify your country code and phone number</LocalizedString>
                   <!-- The following elements will display a message and two links at the bottom of the signup page. 
                   For policies that you intend to show to users in the United States, we suggest displaying the following text. Replace the content of the disclaimer_link_X_url elements with links to your organization's privacy statement and terms and conditions. 
                   Remove any of these lines if you do not wish to display them.  -->
@@ -683,6 +683,7 @@
                         <Item Key="client_id">{service:te}</Item>
                         <Item Key="issuer_refresh_token_user_identity_claim_type">objectId</Item>
                         <Item Key="SendTokenResponseBodyWithJsonNumbers">true</Item>
+                        <Item Key="scope">openid user.signup</Item>
                     </Metadata>
                     <CryptographicKeys>
                         <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
@@ -1110,12 +1111,12 @@
                     </ClaimsExchanges>
                 </OrchestrationStep>
                 <!-- phone section  -->
-                <OrchestrationStep Order="5" Type="ClaimsExchange">
+                <!-- <OrchestrationStep Order="5" Type="ClaimsExchange">
                     <ClaimsExchanges>
                       <ClaimsExchange Id="RESTEnrichToken" TechnicalProfileReferenceId="REST-EnrichToken" />
                     </ClaimsExchanges>
-                </OrchestrationStep>
-                <OrchestrationStep Order="6" Type="SendClaims"
+                </OrchestrationStep> -->
+                <OrchestrationStep Order="5" Type="SendClaims"
                     CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
             </OrchestrationSteps>
         </UserJourney>
@@ -1140,7 +1141,7 @@
                 <OutputClaim ClaimTypeReferenceId="givenName" />
                 <OutputClaim ClaimTypeReferenceId="surname" />
                 <OutputClaim ClaimTypeReferenceId="extension_TPlusUserType" />
-                <OutputClaim ClaimTypeReferenceId="permissions" />
+                <!-- <OutputClaim ClaimTypeReferenceId="permissions" /> -->
                 <OutputClaim ClaimTypeReferenceId="signInNames.phoneNumber" />
                 <OutputClaim ClaimTypeReferenceId="strongAuthenticationEmailAddress" />
                 <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true"

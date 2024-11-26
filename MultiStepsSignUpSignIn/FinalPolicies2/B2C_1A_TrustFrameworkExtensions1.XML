@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TrustFrameworkPolicy 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+  xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" 
+  PolicySchemaVersion="0.3.0.0" 
+  TenantId="tplussupport.onmicrosoft.com" 
+  PolicyId="B2C_1A_TrustFrameworkExtensions1" 
+  PublicPolicyUri="http://tplussupport.onmicrosoft.com/B2C_1A_TrustFrameworkExtensions1">
+  
+  <BasePolicy>
+    <TenantId>tplussupport.onmicrosoft.com</TenantId>
+    <PolicyId>B2C_1A_TrustFrameworkLocalization1</PolicyId>
+  </BasePolicy>
+  <BuildingBlocks>
+
+  </BuildingBlocks>
+
+  <ClaimsProviders>
+
+
+    <ClaimsProvider>
+      <DisplayName>Local Account SignIn</DisplayName>
+      <TechnicalProfiles>
+         <TechnicalProfile Id="login-NonInteractive">
+          <Metadata>
+            <Item Key="client_id">4b744ebc-332c-48ba-a156-348407538fa8</Item>
+            <Item Key="IdTokenAudience">d36e2d06-2e3d-4b0e-9d42-50dfb0ba178d</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="client_id" DefaultValue="4b744ebc-332c-48ba-a156-348407538fa8" />
+            <InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="d36e2d06-2e3d-4b0e-9d42-50dfb0ba178d" />
+          </InputClaims>
+        </TechnicalProfile>
+      </TechnicalProfiles>
+    </ClaimsProvider>
+
+  </ClaimsProviders>
+
+    <!--UserJourneys>
+	
+	</UserJourneys-->
+
+</TrustFrameworkPolicy>

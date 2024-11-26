@@ -3,8 +3,8 @@
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06"
     PolicySchemaVersion="0.3.0.0" TenantId="tplussupport.onmicrosoft.com"
-    PolicyId="B2C_1A_SingleStepSignUp1"
-    PublicPolicyUri="http://tplussupport.onmicrosoft.com/B2C_1A_SingleStepSignUp1">
+    PolicyId="B2C_1A_CustomB2cSignIn"
+    PublicPolicyUri="http://tplussupport.onmicrosoft.com/B2C_1A_CustomB2cSignIn">
 
     <BasePolicy>
         <TenantId>tplussupport.onmicrosoft.com</TenantId>
@@ -448,10 +448,10 @@
                     <Parameter Id="RegularExpression">^[^\\+]+$</Parameter>
                 </Parameters>
             </Predicate>
-            <Predicate Id="IsLengthBetween4And6" Method="IsLengthRange" HelpText="The pin must be between 4 and 6 characters.">
+            <Predicate Id="IsLengthEqualsTo4" Method="IsLengthRange" HelpText="The pin must be 4 digits.">
                 <Parameters>
                   <Parameter Id="Minimum">4</Parameter>
-                  <Parameter Id="Maximum">6</Parameter>
+                  <Parameter Id="Maximum">4</Parameter>
                 </Parameters>
             </Predicate>
             <Predicate Id="PIN" Method="MatchesRegex" HelpText="The pin must be numbers only.">
@@ -507,9 +507,9 @@
             </PredicateValidation>
             <PredicateValidation Id="UserPinValidation">
                 <PredicateGroups>
-                    <PredicateGroup Id="IsLengthBetween4And6Group">
+                    <PredicateGroup Id="IsLengthEqualsTo4Group">
                         <PredicateReferences>
-                            <PredicateReference Id="IsLengthBetween4And6"/>
+                            <PredicateReference Id="IsLengthEqualsTo4"/>
                         </PredicateReferences>
                     </PredicateGroup>
                     <PredicateGroup Id="PINGroup">
